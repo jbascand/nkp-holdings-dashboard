@@ -302,6 +302,7 @@
                 </div>
 
                 <button id="uploadBtn" onclick="uploadCSV()">Upload Data</button>
+                <button id="downloadBtn" onclick="downloadData()" style="display: none;">Download Data as JSON</button>
                 <button class="logout-btn" onclick="logout()">Logout</button>
 
                 <div id="uploadStatus"></div>
@@ -404,26 +405,23 @@
                     const csvText = e.target.result;
                     const { holdingsData: data, accountsData: accounts } = parseCSV(csvText);
                     
-                    statusDiv.innerHTML = '<div class="status-message info">Uploading to server...</div>';
+                    // Store in localStorage
+                    const dataToStore = {
+                        holdingsData: data,
+                        accountsData: accounts,
+                        timestamp: new Date().toISOString()
+                    };
                     
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            holdingsData: data,
-                            accountsData: accounts,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-
-                    if (response.ok) {
-                        statusDiv.innerHTML = '<div class="status-message success">✅ Data uploaded successfully!</div>';
-                        fileInput.value = '';
-                        await loadStatsForAdmin();
-                    } else {
-                        const error = await response.text();
-                        statusDiv.innerHTML = `<div class="status-message error">Upload failed: ${error}</div>`;
-                    }
+                    localStorage.setItem('holdingsData', JSON.stringify(dataToStore));
+                    
+                    statusDiv.innerHTML = '<div class="status-message success">✅ Data processed successfully!<br><br>⚠️ Next step: Click "Download Data as JSON" to get the data file, then manually upload it to GitHub as data.json<br><br>Instructions:<br>1. Click "Download Data as JSON"<br>2. Go to your GitHub repo<br>3. Upload/replace data.json with the downloaded file<br>4. Everyone will see the updated data!</div>';
+                    
+                    fileInput.value = '';
+                    
+                    // Show download button
+                    document.getElementById('downloadBtn').style.display = 'inline-block';
+                    
+                    await loadStatsForAdmin();
                 } catch (err) {
                     statusDiv.innerHTML = `<div class="status-message error">Error: ${err.message}</div>`;
                 }
@@ -431,8 +429,39 @@
             reader.readAsText(file);
         }
 
+        function downloadData() {
+            const data = localStorage.getItem('holdingsData');
+            if (!data) {
+                alert('No data to download. Please upload a CSV first.');
+                return;
+            }
+
+            const dataObj = JSON.parse(data);
+            const dataStr = JSON.stringify(dataObj, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'data.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
         async function loadStatsForAdmin() {
             try {
+                // Try localStorage first
+                const localData = localStorage.getItem('holdingsData');
+                if (localData) {
+                    const data = JSON.parse(localData);
+                    holdingsData = data.holdingsData || [];
+                    accountsData = data.accountsData || {};
+                    displayStats();
+                    return;
+                }
+                
+                // Try loading from data.json
                 const response = await fetch(API_URL);
                 if (response.ok) {
                     const data = await response.json();
@@ -452,23 +481,31 @@
         // ============================================================================
         async function loadAndDisplayData() {
             try {
+                console.log('Loading data from:', API_URL);
                 const response = await fetch(API_URL);
+                
                 if (response.ok) {
                     const data = await response.json();
-                    if (data && data.holdingsData) {
+                    console.log('Data loaded:', data);
+                    
+                    if (data && data.holdingsData && data.holdingsData.length > 0) {
                         holdingsData = data.holdingsData;
-                        accountsData = data.accountsData;
+                        accountsData = data.accountsData || {};
                         displayStats();
                         updateSearch();
                     } else {
-                        document.getElementById('statsGrid').innerHTML = '<p class="loading">No data available yet</p>';
+                        document.getElementById('statsGrid').innerHTML = '<p class="loading">No data available yet. Admin panel will upload data soon.</p>';
+                        document.getElementById('searchResults').innerHTML = '<p class="loading">No data available yet</p>';
                     }
                 } else {
-                    document.getElementById('statsGrid').innerHTML = '<p class="loading">Error loading data</p>';
+                    console.log('Response not ok:', response.status);
+                    document.getElementById('statsGrid').innerHTML = '<p class="loading">No data available yet</p>';
+                    document.getElementById('searchResults').innerHTML = '<p class="loading">No data available yet</p>';
                 }
             } catch (err) {
                 console.error('Error loading data:', err);
-                document.getElementById('statsGrid').innerHTML = '<p class="loading">Error loading data</p>';
+                document.getElementById('statsGrid').innerHTML = '<p class="loading">No data available yet</p>';
+                document.getElementById('searchResults').innerHTML = '<p class="loading">No data available yet</p>';
             }
         }
 
