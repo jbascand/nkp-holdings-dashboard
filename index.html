@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBWere Holdings Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --jbw-navy: #003d5c;
+            --jbw-gold: #d4a86a;
+            --jbw-cream: #fafaf8;
+            --border-color: #e0e0e0;
+            --dark-gray: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--jbw-cream);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--jbw-navy);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .dashboard-section {
+            display: block;
+        }
+
+        .dashboard-section.hidden {
+            display: none;
+        }
+
+        .admin-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .admin-panel h2 {
+            color: var(--jbw-navy);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--jbw-navy);
+        }
+
+        input[type="password"],
+        input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: var(--jbw-navy);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #002d44;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .data-stats {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--jbw-cream);
+            padding: 1.5rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--jbw-gold);
+        }
+
+        .stat-card strong {
+            display: block;
+            color: var(--jbw-navy);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card span {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            background: var(--jbw-navy);
+            color: white;
+            border-color: var(--jbw-navy);
+        }
+
+        .tab-button:hover {
+            border-color: var(--jbw-gold);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: var(--jbw-navy);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #002d44;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            float: right;
+            margin-top: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--jbw-navy);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>JBWere Holdings Dashboard</h1>
+        <p id="headerSubtitle">Loading data...</p>
+    </header>
+
+    <main>
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="admin-section">
+            <div class="admin-panel">
+                <h2>Admin Panel</h2>
+                
+                <div class="form-group">
+                    <label for="csvFile">Upload Holdings CSV</label>
+                    <input type="file" id="csvFile" accept=".csv" />
+                </div>
+
+                <button id="uploadBtn" onclick="uploadCSV()">Upload Data</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+
+                <div id="uploadStatus"></div>
+
+                <div class="data-stats" style="margin-top: 2rem;">
+                    <h3>Current Data</h3>
+                    <div id="statsDisplay" class="stats-grid">
+                        <p class="loading">No data loaded yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-section">
+            <div class="data-stats">
+                <div class="stats-grid" id="statsGrid">
+                    <p class="loading">Loading data...</p>
+                </div>
+            </div>
+
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('search')">Search</button>
+                <button class="tab-button" onclick="switchTab('summary')">Summary</button>
+            </div>
+
+            <div id="search" class="tab-content active">
+                <input type="text" class="search-box" id="searchBox" placeholder="Search holdings..." onkeyup="updateSearch()">
+                <div id="searchResults" style="overflow-x: auto;">
+                    <p class="loading">Loading...</p>
+                </div>
+            </div>
+
+            <div id="summary" class="tab-content">
+                <div id="summaryResults" style="overflow-x: auto;">
+                    <p class="loading">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = '/.netlify/functions/holdings';
+        const ADMIN_PASSWORD = 'nkpholdings123';
+        
+        let holdingsData = [];
+        let accountsData = {};
+        let currentTab = 'search';
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing dashboard...');
+            
+            // Check if admin mode
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                showAdminPanel();
+                await loadStatsForAdmin();
+            } else {
+                await loadAndDisplayData();
+            }
+        });
+
+        // ============================================================================
+        // ADMIN FUNCTIONS
+        // ============================================================================
+        function showAdminPanel() {
+            const password = prompt('Enter admin password:');
+            if (password !== ADMIN_PASSWORD) {
+                alert('Incorrect password');
+                window.location.href = window.location.pathname;
+                return;
+            }
+            
+            document.getElementById('adminPanel').classList.add('active');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+
+        function logout() {
+            window.location.href = window.location.pathname;
+        }
+
+        async function uploadCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            if (!file) {
+                statusDiv.innerHTML = '<div class="status-message error">Please select a file</div>';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    statusDiv.innerHTML = '<div class="status-message info">Processing file...</div>';
+                    
+                    const csvText = e.target.result;
+                    const { holdingsData: data, accountsData: accounts } = parseCSV(csvText);
+                    
+                    statusDiv.innerHTML = '<div class="status-message info">Uploading to server...</div>';
+                    
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            holdingsData: data,
+                            accountsData: accounts,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    if (response.ok) {
+                        statusDiv.innerHTML = '<div class="status-message success">✅ Data uploaded successfully!</div>';
+                        fileInput.value = '';
+                        await loadStatsForAdmin();
+                    } else {
+                        const error = await response.text();
+                        statusDiv.innerHTML = `<div class="status-message error">Upload failed: ${error}</div>`;
+                    }
+                } catch (err) {
+                    statusDiv.innerHTML = `<div class="status-message error">Error: ${err.message}</div>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function loadStatsForAdmin() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.holdingsData) {
+                        holdingsData = data.holdingsData;
+                        accountsData = data.accountsData;
+                        displayStats();
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // ============================================================================
+        // DASHBOARD FUNCTIONS
+        // ============================================================================
+        async function loadAndDisplayData() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.holdingsData) {
+                        holdingsData = data.holdingsData;
+                        accountsData = data.accountsData;
+                        displayStats();
+                        updateSearch();
+                    } else {
+                        document.getElementById('statsGrid').innerHTML = '<p class="loading">No data available yet</p>';
+                    }
+                } else {
+                    document.getElementById('statsGrid').innerHTML = '<p class="loading">Error loading data</p>';
+                }
+            } catch (err) {
+                console.error('Error loading data:', err);
+                document.getElementById('statsGrid').innerHTML = '<p class="loading">Error loading data</p>';
+            }
+        }
+
+        function displayStats() {
+            const symbolCount = new Set(holdingsData.map(h => h.symbol)).size;
+            const accountCount = Object.keys(accountsData).length;
+            const totalValue = Object.values(accountsData).reduce((sum, a) => sum + (a.totalHoldingsValue || 0), 0);
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <strong>${accountCount}</strong>
+                    <span>Accounts</span>
+                </div>
+                <div class="stat-card">
+                    <strong>${symbolCount}</strong>
+                    <span>Unique Symbols</span>
+                </div>
+                <div class="stat-card">
+                    <strong>${holdingsData.length}</strong>
+                    <span>Total Holdings</span>
+                </div>
+                <div class="stat-card">
+                    <strong>$${(totalValue / 1e6).toFixed(1)}M</strong>
+                    <span>Total AUM</span>
+                </div>
+            `;
+
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+            document.getElementById('headerSubtitle').textContent = 
+                `${accountCount} accounts • ${holdingsData.length} holdings • $${(totalValue / 1e6).toFixed(1)}M AUM`;
+        }
+
+        function updateSearch() {
+            const searchTerm = document.getElementById('searchBox').value.toUpperCase();
+            let filtered = holdingsData;
+
+            if (searchTerm) {
+                filtered = holdingsData.filter(h => {
+                    const account = accountsData[h.accountNumber];
+                    return h.symbol.includes(searchTerm) ||
+                           h.assetClass.toUpperCase().includes(searchTerm) ||
+                           h.accountNumber.includes(searchTerm) ||
+                           (account?.accountName || '').toUpperCase().includes(searchTerm);
+                });
+            }
+
+            const resultsHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Asset Class</th>
+                            <th>Account</th>
+                            <th style="text-align: right;">Value</th>
+                            <th style="text-align: right;">Weight of Total</th>
+                            <th style="text-align: right;">Weight in Asset Class</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(h => {
+                            const account = accountsData[h.accountNumber];
+                            const accountDisplay = `${h.accountNumber}${account?.accountName ? ` — ${account.accountName}` : ''}`;
+                            return `
+                                <tr>
+                                    <td>${h.symbol}</td>
+                                    <td>${h.assetClass}</td>
+                                    <td>${accountDisplay}</td>
+                                    <td style="text-align: right;">$${(h.value / 1000).toFixed(0)}K</td>
+                                    <td style="text-align: right;">${(h.actualWeight || 0).toFixed(2)}%</td>
+                                    <td style="text-align: right;">${(h.actualAssetClassWeight || 0).toFixed(2)}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('searchResults').innerHTML = resultsHTML;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+        }
+
+        // ============================================================================
+        // CSV PARSING
+        // ============================================================================
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const holdingsData = [];
+            const accountsData = {};
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+
+                const accountNum = row['Account Number'];
+                if (!accountNum) continue;
+
+                if (!accountsData[accountNum]) {
+                    accountsData[accountNum] = {
+                        accountNumber: accountNum,
+                        accountName: row['Account Name'] || '',
+                        advisor: row['Advisor / Team'] || '',
+                        totalHoldingsValue: 0
+                    };
+                }
+
+                // Parse holdings
+                for (let j = 1; j <= 170; j++) {
+                    const symbolKey = `holding_${String(j).padStart(3, '0')}_Symbol`;
+                    const symbol = row[symbolKey];
+                    
+                    if (symbol && symbol.length > 0) {
+                        const holding = {
+                            accountNumber: accountNum,
+                            symbol: symbol.toUpperCase(),
+                            assetClass: row[`holding_${String(j).padStart(3, '0')}_Standard Asset Class`] || '',
+                            value: parseFloat(row[`holding_${String(j).padStart(3, '0')}_Value ($)`]) || 0,
+                            actualWeight: normalizePercent(row[`holding_${String(j).padStart(3, '0')}_Actual Weight of Total`]),
+                            actualAssetClassWeight: normalizePercent(row[`holding_${String(j).padStart(3, '0')}_Actual Weight of Asset Class`])
+                        };
+                        
+                        holdingsData.push(holding);
+                        accountsData[accountNum].totalHoldingsValue += holding.value;
+                    }
+                }
+            }
+
+            return { holdingsData, accountsData };
+        }
+
+        function normalizePercent(value) {
+            if (!value) return 0;
+            const num = parseFloat(String(value).replace(/[%,]/g, ''));
+            if (num > 0 && num < 1) return num * 100;
+            return num || 0;
+        }
+    </script>
+</body>
+</html>
